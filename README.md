@@ -167,10 +167,6 @@ jobs:
         uses: sarthak2233/gdss-radar@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          threshold: "0.1"             # Optional: collision intensity threshold (0.0 to 1.0)
-          fail_on_collision: "false"   # Optional: set to 'true' to block PR merge
-          provider: "github"           # Optional: github, openai, openrouter, deepseek
-          model: "gpt-4o"              # Optional: model identifier
 ```
 
 ---
@@ -186,14 +182,38 @@ jobs:
 | `uses: actions/checkout@v4`<br>`with: fetch-depth: 0` | **Mandatory requirement.** Clones the entire Git commit history rather than a shallow single commit (`depth: 1`). | **Fatal Failure:** GDSS cannot resolve the common merge-base ancestor between concurrent PR branches, causing DAG trajectory calculation to abort. |
 | `uses: sarthak2233/gdss-radar@v1` | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
 | `with.token: ${{ secrets.GITHUB_TOKEN }}` | Built-in GitHub token automatically provided to every Actions workflow. Used to query concurrent open PRs and authenticate free GitHub Models API requests. | Action cannot query GitHub REST API to discover concurrent pull requests. |
-| `with.threshold: "0.1"` | Sets the collision sensitivity threshold ($\Omega_{ij} \in [0.0, 1.0]$). Collisions below this score are treated as commuting/safe. | Defaults to `0.1`. |
-| `with.fail_on_collision: "false"` | Determines whether detected severe collisions exit with code `1` (blocking PR merge) or code `0` (informational sticky report). | Defaults to `false` (informational mode). Set to `'true'` for strict branch protection gating. |
+
+> [!TIP]
+> **Unified Configuration:** All radar tuning parameters (such as `model`, `risk_threshold`, `fail_on_collision`, `context_window`, and test commands) are configured in the single **`.gdss.yml`** file at your repository root. This ensures your local CLI and CI runner always behave identically.
 
 ---
 
 ## ⚙️ The Configuration File (`.gdss.yml`)
 
 GDSS is zero-config by default, but **committing a `.gdss.yml` file to the root of your repository is the recommended best approach** for production teams.
+
+> [!IMPORTANT]
+> ### 📁 Exact File Naming & Directory Locations (Avoid Common Mistakes)
+> Please ensure you distinguish between the two separate files:
+>
+> | File | Location | Purpose |
+> | :--- | :--- | :--- |
+> | **GitHub Actions Workflow** | `.github/workflows/gdss-radar.yml` | Tells GitHub Actions when to run and invokes `sarthak2233/gdss-radar@v1`. |
+> | **Repository Configuration** | **`/.gdss.yml`** *(at repository root)* | Configures model, risk thresholds, validation commands, and branch rules. |
+>
+> ⚠️ **Common Mistake:** Do **NOT** name the root configuration file `.gdss-radar.yml`. The GDSS engine specifically searches for **`.gdss.yml`** (or `.gdss.yaml`). If you name it `.gdss-radar.yml`, it will not be detected.
+>
+> ```text
+> your-project/
+> ├── .github/
+> │   └── workflows/
+> │       └── gdss-radar.yml       <-- GitHub Actions workflow trigger
+> ├── .gdss.yml                   <-- Engine configuration (MUST be .gdss.yml, NOT .gdss-radar.yml)
+> ├── package.json (or pyproject.toml / go.mod)
+> └── src/
+> ```
+
+---
 
 ### 🌟 The Golden Rule: Avoid Fallback Constriction
 
@@ -490,14 +510,12 @@ hierarchy:
 
 To use GDSS as a required status check in GitHub Branch Protection rules:
 
-1. In your `.github/workflows/gdss-radar.yml`, set `fail_on_collision: 'true'`:
+1. In your **`.gdss.yml`** at the repository root, set `fail_on_collision: true`:
 ```yaml
-      - name: Run GDSS PR Collision Radar (Strict Gate)
-        uses: sarthak2233/gdss-radar@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fail_on_collision: 'true'
-          threshold: '0.2'
+# In .gdss.yml
+radar:
+  fail_on_collision: true  # Exits with code 1 if severe collision is detected
+  risk_threshold: 0.2      # Severity threshold (0.0 to 1.0)
 ```
 2. In your GitHub repository settings, navigate to **Settings ➔ Branches ➔ Branch protection rules**.
 3. Under **Require status checks to pass before merging**, search for and select **`Audit Cross-Branch PR Collisions`**.

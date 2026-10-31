@@ -1,7 +1,9 @@
 # ==============================================================================
 # .gdss.yml - GDSS Semantic Repository Intelligence Configuration
 # ==============================================================================
-# Place this file in the ROOT of your repository.
+# IMPORTANT: Name this file '.gdss.yml' (or '.gdss.yaml') in your REPOSITORY ROOT.
+# ⚠️ DO NOT name it '.gdss-radar.yml' (the engine looks specifically for .gdss.yml).
+#
 # Both local developer CLI operations and the GitHub Actions CI Radar will
 # automatically load these settings as the single source of truth.
 # ==============================================================================
