@@ -1,0 +1,51 @@
+name: 'GDSS PR Collision Radar'
+description: 'Detect cross-branch semantic collisions across concurrent pull requests and generate validated convergence patches'
+author: 'Sarthak Basnet'
+branding:
+  icon: 'git-merge'
+  color: 'blue'
+
+inputs:
+  token:
+    description: 'GitHub Token for querying concurrent open pull requests and posting sticky radar reports'
+    required: true
+    default: ${{ github.token }}
+
+  threshold:
+    description: 'Collision intensity threshold to flag (default: 0.1)'
+    required: false
+    default: '0.1'
+
+  fail_on_collision:
+    description: 'Exit code 1 if severe collision is detected (blocks PR merge in branch protection)'
+    required: false
+    default: 'false'
+
+  provider:
+    description: 'LLM provider for candidate patch generation (github-models, openai, openrouter, ollama, vllm)'
+    required: false
+    default: 'github-models'
+
+  model:
+    description: 'Model identifier (e.g. gpt-4o, qwen2.5-coder, anthropic/claude-3.5-sonnet)'
+    required: false
+    default: 'gpt-4o'
+
+  args:
+    description: 'Additional CLI arguments passed directly to gdss audit-pr'
+    required: false
+    default: ''
+
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/sarthak2233/gdss-runner:latest'
+  env:
+    GITHUB_TOKEN: ${{ inputs.token }}
+  args:
+    - 'audit-pr'
+    - '--threshold'
+    - ${{ inputs.threshold }}
+    - '--provider'
+    - ${{ inputs.provider }}
+    - '--model'
+    - ${{ inputs.model }}
