@@ -1,0 +1,121 @@
+# ==============================================================================
+# .gdss.yml - GDSS Semantic Repository Intelligence Configuration
+# ==============================================================================
+# Place this file in the ROOT of your repository.
+# Both local CLI operations and the GitHub Actions CI Radar will automatically
+# load these settings as the single source of truth.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. AI Convergence & PR Collision Radar
+# ------------------------------------------------------------------------------
+radar:
+  # The model used for semantic patch reconciliation & synthesis.
+  # Popular options:
+  #   - "gpt-4o" (GitHub Models default, OpenAI)
+  #   - "gpt-4o-mini" (fast, lightweight)
+  #   - "deepseek-chat" (DeepSeek V3 / R1)
+  #   - "claude-3-5-sonnet-20241022" (OpenRouter / Anthropic)
+  model: "gpt-4o"
+
+  # [RECOMMENDED BEST PRACTICE] Explicit Context Window (in tokens)
+  # ----------------------------------------------------------------------------
+  # Declaring context_window explicitly guarantees that GDSS allocates up to 45%
+  # of the context window (up to 96,000 characters) for rich code symbol AST
+  # definitions, caller/callee graphs, and commit trajectories.
+  #
+  # If omitted, GDSS uses heuristic fallbacks which default conservatively to 16k,
+  # causing unnecessary ellipsis condensation (/* ... N lines condensed ... */).
+  #
+  # Reference sizes:
+  #   gpt-4o: 128000
+  #   gpt-4o-mini: 128000
+  #   deepseek-chat: 64000
+  #   claude-3-5-sonnet: 200000
+  #   llama-3.3-70b: 128000
+  context_window: 128000
+
+  # LLM Provider:
+  #   - "github" (default in CI: uses free GitHub Models via GITHUB_TOKEN)
+  #   - "openai" (uses OPENAI_API_KEY)
+  #   - "openrouter" (uses OPENROUTER_API_KEY)
+  #   - "deepseek" (uses DEEPSEEK_API_KEY)
+  #   - "ollama" / "vllm" (for self-hosted local setups)
+  provider: "github"
+
+  # Collision risk sensitivity threshold (0.0 to 1.0).
+  # 0.05 = Aggressive (flags subtle cross-file caller dependencies)
+  # 0.10 = Standard recommended balance (default)
+  # 0.25 = Strict (flags only direct signature changes & severe AST overlaps)
+  risk_threshold: 0.1
+
+  # Maximum agentic self-correction iterations in the ephemeral sandbox.
+  # When GDSS generates a candidate patch, it compiles and runs tests in an
+  # ephemeral Git worktree. If tests fail, it feeds the compiler error trace back
+  # to the model to refine the patch up to max_refinements times.
+  max_refinements: 2
+
+  # Branch protection gating:
+  # If true, the CI job exits with code 1 when severe collisions are detected.
+  # If false, the CI job remains green and posts an informational sticky report.
+  fail_on_collision: false
+
+# ------------------------------------------------------------------------------
+# 2. Ephemeral Sandbox Validation
+# ------------------------------------------------------------------------------
+# GDSS validates candidate reconciliation patches in isolated temporary Git
+# worktrees before human review. Configure your project's validation commands:
+validation:
+  # Targeted test runner command.
+  # Use {test_file} placeholder for targeted test execution.
+  # Examples:
+  #   TypeScript/JS: "npm test -- {test_file}" or "pnpm test {test_file}"
+  #   Python:        "pytest {test_file}"
+  #   Go:            "go test -v ./{test_file}/..."
+  #   Rust:          "cargo test --test {test_file}"
+  test_command: "npm test -- {test_file}"
+
+  # Static type checker or linter command.
+  # Use {file} placeholder for targeted file checking.
+  # Examples:
+  #   TypeScript:    "npx tsc --noEmit"
+  #   Python:        "mypy {file}"
+  #   Go:            "golangci-lint run"
+  #   Rust:          "cargo check"
+  typecheck_command: "npx tsc --noEmit"
+
+  # Maximum duration in seconds allowed for validation runs in the sandbox.
+  timeout_seconds: 60
+
+# ------------------------------------------------------------------------------
+# 3. Branch Hierarchy & Flight Radar Boundaries
+# ------------------------------------------------------------------------------
+hierarchy:
+  # Primary reference branch (attractor base)
+  reference_branch: "main"
+
+  # When true, only pull requests targeting the SAME base branch (e.g. main)
+  # are audited against each other. Highly recommended for production to avoid
+  # noisy comparisons against unrelated long-lived release or feature branches.
+  same_base_only: true
+
+  # Glob patterns of branches to exclude from radar auditing
+  exclude:
+    - "dependabot/*"
+    - "renovate/*"
+    - "spike/*"
+    - "release/*"
+
+# ------------------------------------------------------------------------------
+# 4. AST Symbol & Path Filtering
+# ------------------------------------------------------------------------------
+ast:
+  # File paths to exclude from AST symbol parsing and collision analysis
+  exclude_patterns:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - "vendor/**"
+    - ".venv/**"
+    - "*.min.js"
+    - "coverage/**"
