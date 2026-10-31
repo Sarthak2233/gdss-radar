@@ -167,6 +167,10 @@ jobs:
         uses: sarthak2233/gdss-radar@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          threshold: "0.1"             # Optional: collision intensity threshold (0.0 to 1.0)
+          fail_on_collision: "false"   # Optional: set to 'true' to block PR merge
+          provider: "github"           # Optional: github, openai, openrouter, deepseek
+          model: "gpt-4o"              # Optional: model identifier
 ```
 
 ---
