@@ -2,20 +2,22 @@
 # .gdss.yml - GDSS Semantic Repository Intelligence Configuration
 # ==============================================================================
 # Place this file in the ROOT of your repository.
-# Both local CLI operations and the GitHub Actions CI Radar will automatically
-# load these settings as the single source of truth.
+# Both local developer CLI operations and the GitHub Actions CI Radar will
+# automatically load these settings as the single source of truth.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
 # 1. AI Convergence & PR Collision Radar
 # ------------------------------------------------------------------------------
 radar:
-  # The model used for semantic patch reconciliation & synthesis.
+  # The LLM used for semantic patch reconciliation & contract synthesis.
   # Popular options:
   #   - "gpt-4o" (GitHub Models default, OpenAI)
-  #   - "gpt-4o-mini" (fast, lightweight)
+  #   - "gpt-4o-mini" (Fast, lightweight, low-cost)
   #   - "deepseek-chat" (DeepSeek V3 / R1)
   #   - "claude-3-5-sonnet-20241022" (OpenRouter / Anthropic)
+  #   - "llama-3.3-70b-versatile" (Groq / OpenRouter)
+  #   - "qwen2.5-coder:7b" (Local Ollama / vLLM)
   model: "gpt-4o"
 
   # [RECOMMENDED BEST PRACTICE] Explicit Context Window (in tokens)
@@ -44,9 +46,11 @@ radar:
   provider: "github"
 
   # Collision risk sensitivity threshold (0.0 to 1.0).
-  # 0.05 = Aggressive (flags subtle cross-file caller dependencies)
-  # 0.10 = Standard recommended balance (default)
-  # 0.25 = Strict (flags only direct signature changes & severe AST overlaps)
+  # Collisions with severity >= risk_threshold will be flagged in the PR report.
+  #   0.05 = Aggressive (flags subtle cross-file caller dependencies)
+  #   0.10 = Standard recommended balance (default)
+  #   0.25 = Strict (flags only direct signature changes & severe AST overlaps)
+  #   0.80 = Critical only (flags only outright contradictory mutations)
   risk_threshold: 0.1
 
   # Maximum agentic self-correction iterations in the ephemeral sandbox.
@@ -94,10 +98,20 @@ hierarchy:
   # Primary reference branch (attractor base)
   reference_branch: "main"
 
-  # When true, only pull requests targeting the SAME base branch (e.g. main)
-  # are audited against each other. Highly recommended for production to avoid
-  # noisy comparisons against unrelated long-lived release or feature branches.
+  # Precedence chain for multi-stage branch landing
+  priority_chain:
+    - "main"
+    - "develop"
+
+  # [CRITICAL] When true, only pull requests targeting the SAME base branch
+  # (e.g. main) are audited against each other. Highly recommended for production
+  # to eliminate noisy false alarms against unrelated maintenance or release branches.
   same_base_only: true
+
+  # Glob patterns of branches to include in collision auditing (optional)
+  include:
+    - "feature/*"
+    - "fix/*"
 
   # Glob patterns of branches to exclude from radar auditing
   exclude:
@@ -106,10 +120,21 @@ hierarchy:
     - "spike/*"
     - "release/*"
 
+  # Specific base branches that activate collision radar audits
+  target_bases:
+    - "main"
+    - "develop"
+
 # ------------------------------------------------------------------------------
 # 4. AST Symbol & Path Filtering
 # ------------------------------------------------------------------------------
 ast:
+  # Additional file extensions to track for AST and semantic analysis
+  additional_extensions:
+    - ".vue"
+    - ".svelte"
+    - ".sol"
+
   # File paths to exclude from AST symbol parsing and collision analysis
   exclude_patterns:
     - "node_modules/**"
