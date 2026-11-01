@@ -44,8 +44,6 @@ Explore the complete documentation for GDSS Standalone CLI, IDE MCP Server, and 
 | [**⚙️ Repository Configuration Guide**](docs/CONFIGURATION_GUIDE.md) | Comprehensive `.gdss.yml` schema, explicit context window sizing, model suitability matrix, and provider recipes. | Maintainers & DevOps |
 | [**🛰️ GitHub Actions CI Guide**](docs/GITHUB_ACTIONS_GUIDE.md) | Multi-PR batch handling, sticky PR comments, strict branch protection gating, and fork handling. | CI/CD Engineers |
 | [**🌐 Universal Multi-Asset Guide**](docs/UNIVERSAL_MULTI_ASSET_GUIDE.md) | How GDSS audits package manifests (`package.json`), database migrations (split-head hazards), and SQL DDL. | Full-Stack & DBAs |
-| [**🤖 AI Convergence & Suggestions Guide**](docs/SUGGESTION_AND_CONVERGENCE_GUIDE.md) | Deep dive into candidate reconciliation generation, ephemeral worktree validation, and compiler self-healing loops. | AI & Integrators |
-
 ---
 
 ## 🎯 The Problem: Single-PR Blindness
