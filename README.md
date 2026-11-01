@@ -27,6 +27,7 @@
 - [🛠️ Stack-Specific Configuration Recipes](#️-stack-specific-configuration-recipes)
 - [🚦 Strict Merge Protection (Blocking Gate)](#-strict-merge-protection-blocking-gate)
 - [📊 What You See on Pull Requests](#-what-you-see-on-pull-requests)
+- [💻 Standalone Binary & IDE MCP Server (Cursor & Claude Code)](#-standalone-binary--ide-mcp-server-cursor--claude-code)
 - [🛡️ Privacy & Zero Token Bleed](#️-privacy--zero-token-bleed)
 
 ---
@@ -558,6 +559,53 @@ def login(username: str, token: str, timeout: int = 30) -> AuthResponse:
 ```
 
 Developers can click **"Commit suggestion"** directly inside the GitHub PR UI to land the validated reconciliation with zero manual cherry-picking.
+
+---
+
+## 💻 Standalone Binary & IDE MCP Server (Cursor & Claude Code)
+
+Want to run collision checks locally on your laptop, or give **Cursor**, **Claude Code**, and **VS Code Copilot** direct access to GDSS intelligence?
+
+Install the pre-compiled standalone binary (**zero Python installation required**).
+
+### 🚀 1-Line Universal Installer
+
+**macOS & Linux (Bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/sarthak2233/gdss-radar/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/sarthak2233/gdss-radar/main/install.ps1 | iex
+```
+
+### 🧠 Connect to Cursor (`~/.cursor/mcp.json`)
+Add GDSS to your global Cursor MCP configuration:
+```json
+{
+  "mcpServers": {
+    "gdss": {
+      "command": "gdss",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### 🤖 Connect to Claude Code
+```bash
+claude mcp add gdss -- gdss mcp
+```
+
+### 🛠️ What Your AI Assistant Can Do:
+Your IDE AI agent gains 6 deterministic, zero-token tools:
+- `gdss_find_collisions`: Checks your active branch against teammates' open branches.
+- `gdss_get_merge_order`: Computes mathematically optimal branch landing sequence.
+- `gdss_inspect_symbol_impact`: Traces blast radius of any function or class refactor.
+- `gdss_plan_semantic_rebase`: Rebase recommendations distinguishing signature shifts from noise.
+- `gdss_sandbox_validate_patch`: Tests candidate patches in ephemeral Git worktrees.
+- `gdss_validate_patch`: Instant syntax and static type verification.
 
 ---
 
