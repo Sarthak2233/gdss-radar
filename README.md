@@ -267,6 +267,8 @@ radar:
   provider: "github"      # Uses free GitHub Models via GITHUB_TOKEN
   risk_threshold: 0.1     # Sensitivity: 0.05 (sensitive) to 0.25 (strict)
   max_refinements: 2      # Sandboxed self-correction loops on compiler errors
+  concurrency_limit: 4    # Concurrent worker threads for parallel conflict drafting
+  condensation: "lossless" # Context policy: "lossless", "ast_minimal", or "off"
   fail_on_collision: false
 
 # ------------------------------------------------------------------------------
