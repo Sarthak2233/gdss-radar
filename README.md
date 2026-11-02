@@ -184,8 +184,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           threshold: "0.1"             # Optional: collision intensity threshold (0.0 to 1.0)
           fail_on_collision: "false"   # Optional: set to 'true' to block PR merge
-          provider: "github"           # Optional: github, openai, openrouter, deepseek
-          model: "gpt-4o"              # Optional: model identifier
+          provider: "openrouter"       # Optional: openrouter (default), copilot, azure, openai, deepseek
+          model: "qwen/qwen-2.5-coder-32b-instruct" # Optional: model identifier
 ```
 
 ---
@@ -200,7 +200,7 @@ jobs:
 | `permissions: pull-requests: write`<br>`permissions: issues: write` | Grants permission to post and update the sticky Markdown collision radar report directly on the incoming pull request. | Action calculates collisions but crashes when attempting to post the sticky report comment to the PR. |
 | `uses: actions/checkout@v4`<br>`with: fetch-depth: 0` | **Mandatory requirement.** Clones the entire Git commit history rather than a shallow single commit (`depth: 1`). | **Fatal Failure:** GDSS cannot resolve the common merge-base ancestor between concurrent PR branches, causing DAG trajectory calculation to abort. |
 | `uses: sarthak2233/gdss-radar@v1` | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
-| `with.token: ${{ secrets.GITHUB_TOKEN }}` | Built-in GitHub token automatically provided to every Actions workflow. Used to query concurrent open PRs and authenticate free GitHub Models API requests. | Action cannot query GitHub REST API to discover concurrent pull requests. |
+| `with.token: ${{ secrets.GITHUB_TOKEN }}` | Built-in GitHub token automatically provided to every Actions workflow. Used strictly to query concurrent open PRs and post/update the sticky radar report comment. | Action cannot query GitHub REST API to discover concurrent pull requests or post sticky report comments. |
 
 > [!TIP]
 > **Unified Configuration:** All radar tuning parameters (such as `model`, `risk_threshold`, `fail_on_collision`, `context_window`, and test commands) are configured in the single **`.gdss.yml`** file at your repository root. This ensures your local CLI and CI runner always behave identically.
@@ -264,7 +264,7 @@ Save this file as **`.gdss.yml`** in the **root** of your repository:
 radar:
   model: "gpt-4o"
   context_window: 128000  # Explicit token ceiling (MANDATORY BEST PRACTICE)
-  provider: "github"      # Uses free GitHub Models via GITHUB_TOKEN
+  provider: "openrouter"  # "openrouter" (default), "copilot" (Copilot CLI), "azure", "openai", "ollama"
   risk_threshold: 0.1     # Sensitivity: 0.05 (sensitive) to 0.25 (strict)
   max_refinements: 2      # Sandboxed self-correction loops on compiler errors
   concurrency_limit: 4    # Concurrent worker threads for parallel conflict drafting
@@ -324,7 +324,7 @@ ast:
 | :--- | :--- | :--- | :--- |
 | `model` | `string` | `"gpt-4o"` | The model ID used for semantic patch reconciliation. Common choices: `"gpt-4o"`, `"gpt-4o-mini"`, `"deepseek-chat"`, `"claude-3-5-sonnet-20241022"`, `"llama-3.3-70b-versatile"`. |
 | `context_window` | `integer` | `128000` | **Mandatory Best Practice.** Declares the exact token window capacity. Allocates up to 45% of tokens to symbol definitions. Prevents fallback to 16,384 tokens. |
-| `provider` | `string` | `"github"` | Inference backend: `"github"` (uses free GitHub Models via `GITHUB_TOKEN`), `"openai"` (`OPENAI_API_KEY`), `"openrouter"`, `"deepseek"`, `"ollama"`. |
+| `provider` | `string` | `"openrouter"` | Inference backend: `"openrouter"` (recommended free tier via `OPENROUTER_API_KEY`), `"copilot"` (GitHub Copilot CLI via `GITHUB_TOKEN` & `copilot-requests: write`), `"azure"`, `"openai"`, `"ollama"`. |
 | `risk_threshold` | `float` | `0.1` | Collision intensity threshold ($\Omega_{ij} \in [0.0, 1.0]$).<br>• `0.05`: High sensitivity (flags subtle caller dependencies)<br>• `0.10`: Recommended default balance<br>• `0.25`: Strict (flags only direct signature changes)<br>• `0.80`: Critical only (flags conflicting implementations) |
 | `max_refinements` | `integer` | `2` | Number of automated self-correction loops. If tests fail in the sandbox worktree, compiler error traces are fed back to the model to refine the patch up to $N$ times. |
 | `fail_on_collision` | `boolean` | `false` | If `true`, the CI job exits with code `1` when severe collisions are detected (used for required branch protection status checks). |
@@ -361,8 +361,11 @@ Here are the key operational principles and behaviors you should know when using
 ### 1. 💰 $0 API Cost & Zero Token Bleed Core
 The deterministic core of GDSS — AST parsing, dependency graphs, caller/callee tracing, domain reducers, and the $\Omega_{ij}$ collision tensor — runs **100% locally on CPU within the GitHub Actions runner**. It costs **literal $0 and 0 tokens** for every repository.
 
-### 2. 🤖 Free AI Suggestions via GitHub Models
-GDSS does not require you to purchase third-party OpenAI or Anthropic credits. In GitHub Actions, it automatically authenticates with **GitHub Models** using your workflow's `${{ secrets.GITHUB_TOKEN }}`, giving your team free candidate reconciliation patches.
+### 2. 🤖 Flexible, Low-Cost AI Patch Convergence
+GDSS provides multiple zero-cost and enterprise options for synthesizing reconciliation patches:
+- **OpenRouter Free Tier ($0, No Credit Card):** Set `provider: "openrouter"` in `.gdss.yml` and provide `OPENROUTER_API_KEY` in GitHub Secrets. Runs capable models like `qwen/qwen-2.5-coder-32b-instruct` for free.
+- **GitHub Copilot CLI in CI:** If your organization has Copilot Business or Enterprise, set `provider: "copilot"`, add `copilot-requests: write` to your workflow permissions, and install `@github/copilot`. GDSS strictly runs Copilot with `--deny-tool='*'` so it acts purely as an inference engine to stdout and cannot edit repository files directly.
+- **Deterministic Baseline ($0 Tokens, No Keys):** If no AI keys are provided, GDSS runs completely deterministically on runner CPU, generating collision interaction tensors ($\Omega_{ij}$), risk topologies, and optimal merge order sequences.
 
 ### 3. ⚠️ Mandatory `fetch-depth: 0`
 Standard GitHub Actions checkout uses `depth: 1` (a shallow copy of only the latest commit). GDSS **requires `fetch-depth: 0`** to inspect the Git DAG, identify the common ancestor merge-base between concurrent branches, and calculate trajectory mutations ($dC$).
@@ -456,7 +459,7 @@ This pairwise 3-way batching guarantees that adding 5 or 50 concurrent PRs **nev
 radar:
   model: "gpt-4o"
   context_window: 128000
-  provider: "github"
+  provider: "openrouter"
   risk_threshold: 0.1
   max_refinements: 2
 
@@ -475,7 +478,7 @@ hierarchy:
 radar:
   model: "gpt-4o"
   context_window: 128000
-  provider: "github"
+  provider: "openrouter"
   risk_threshold: 0.1
   max_refinements: 2
 
@@ -494,7 +497,7 @@ hierarchy:
 radar:
   model: "gpt-4o"
   context_window: 128000
-  provider: "github"
+  provider: "openrouter"
   risk_threshold: 0.1
 
 validation:
@@ -512,7 +515,7 @@ hierarchy:
 radar:
   model: "gpt-4o"
   context_window: 128000
-  provider: "github"
+  provider: "openrouter"
   risk_threshold: 0.1
 
 validation:
@@ -629,7 +632,7 @@ Your IDE AI agent gains 6 deterministic, zero-token tools:
 
 - **100% Deterministic Core:** Abstract Syntax Tree (AST) parsing, caller/callee graphs, and the pairwise collision radar run purely on the local GitHub Actions runner.
 - **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database.
-- **Bring Your Own Compute (BYOC):** AI convergence suggestions run via your repository's entitled GitHub Models or your own API keys.
+- **Bring Your Own Compute (BYOC):** AI convergence suggestions run via your own model choices: OpenRouter Free Tier, GitHub Copilot CLI in CI, Microsoft Azure AI Foundry, or direct provider API keys. GDSS charges zero token markups.
 - **No Unsolicited Telemetry:** GDSS respects developer privacy and complies with strict zero-telemetry boundaries.
 
 ---
