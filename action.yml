@@ -7,7 +7,7 @@ branding:
 
 inputs:
   token:
-    description: 'GitHub Token for querying concurrent open pull requests, posting sticky radar reports, and calling GitHub Models'
+    description: 'GitHub Token for querying concurrent open pull requests and posting sticky radar reports'
     required: true
     default: ${{ github.token }}
 

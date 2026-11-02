@@ -14,7 +14,7 @@
 radar:
   # The LLM used for semantic patch reconciliation & contract synthesis.
   # Popular options:
-  #   - "gpt-4o" (GitHub Models default, OpenAI)
+  #   - "gpt-4o" (Microsoft Azure AI Foundry, OpenAI)
   #   - "gpt-4o-mini" (Fast, lightweight, low-cost)
   #   - "deepseek-chat" (DeepSeek V3 / R1)
   #   - "claude-3-5-sonnet-20241022" (OpenRouter / Anthropic)
@@ -42,12 +42,13 @@ radar:
   context_window: 128000
 
   # LLM Provider:
-  #   - "github" (default in CI: uses free GitHub Models via GITHUB_TOKEN)
+  #   - "openrouter" (Recommended free tier & multi-model gateway via OPENROUTER_API_KEY)
   #   - "openai" (uses OPENAI_API_KEY)
-  #   - "openrouter" (uses OPENROUTER_API_KEY)
   #   - "deepseek" (uses DEEPSEEK_API_KEY)
+  #   - "copilot" (GitHub Copilot CLI in CI via GITHUB_TOKEN & copilot-requests: write)
   #   - "ollama" / "vllm" (for self-hosted local setups)
-  provider: "github"
+  provider: "openrouter"
+  model: "qwen/qwen-2.5-coder-32b-instruct"
 
   # Collision risk sensitivity threshold (0.0 to 1.0).
   # Collisions with severity >= risk_threshold will be flagged in the PR report.
