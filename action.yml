@@ -18,7 +18,7 @@ inputs:
 #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 runs:
   using: 'docker'
-  image: 'docker://ghcr.io/sarthak2233/gdss-runner:latest'
+  image: 'docker://ghcr.io/sarthak2233/gdss-runner:v1'
   env:
     GITHUB_TOKEN: ${{ inputs.token }}
   args:

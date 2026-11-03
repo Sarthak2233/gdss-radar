@@ -180,13 +180,13 @@ jobs:
           fetch-depth: 0  # CRITICAL: Required for 3-way DAG & merge-base resolution
 
       - name: Run GDSS PR Collision Radar
-        uses: sarthak2233/gdss-radar@v1
+        uses: sarthak2233/gdss-radar@v1.1.0  # Or @v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          threshold: "0.1"             # Optional: collision intensity threshold (0.0 to 1.0)
-          fail_on_collision: "false"   # Optional: set to 'true' to block PR merge
-          provider: "openrouter"       # Optional: openrouter (default), copilot, azure, openai, deepseek
-          model: "qwen/qwen-2.5-coder-32b-instruct" # Optional: model identifier
+        env:
+          # Optional: Bring Your Own Key for AI suggestions (omit for 100% deterministic $0 radar)
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # or OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
 ---
@@ -200,11 +200,12 @@ jobs:
 | `permissions: contents: read` | Grants the runner permission to read repository files and Git tree commits. | Action fails at startup when checking out repository files. |
 | `permissions: pull-requests: write`<br>`permissions: issues: write` | Grants permission to post and update the sticky Markdown collision radar report directly on the incoming pull request. | Action calculates collisions but crashes when attempting to post the sticky report comment to the PR. |
 | `uses: actions/checkout@v4`<br>`with: fetch-depth: 0` | **Mandatory requirement.** Clones the entire Git commit history rather than a shallow single commit (`depth: 1`). | **Fatal Failure:** GDSS cannot resolve the common merge-base ancestor between concurrent PR branches, causing DAG trajectory calculation to abort. |
-| `uses: sarthak2233/gdss-radar@v1` | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
-| `with.token: ${{ secrets.GITHUB_TOKEN }}` | Built-in GitHub token automatically provided to every Actions workflow. Used strictly to query concurrent open PRs and post/update the sticky radar report comment. | Action cannot query GitHub REST API to discover concurrent pull requests or post sticky report comments. |
+| `uses: sarthak2233/gdss-radar@v1.1.0`<br>*(or `@v1`)* | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner:v1`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
+| `with.token: ${{ secrets.GITHUB_TOKEN }}` | **The only action input.** Built-in GitHub token automatically provided to every Actions workflow. Used strictly to discover concurrent PRs and post/update the sticky radar comment. | Action cannot query GitHub REST API to discover concurrent pull requests or post sticky report comments. |
+| `env.OPENROUTER_API_KEY`<br>*(Optional)* | Passes your team's secret into the runner for AI convergence patch generation (BYOK). | If omitted, GDSS runs purely in deterministic mode ($0 & 0 tokens), outputting the collision radar and merge order without AI text patches. |
 
-> [!TIP]
-> **Unified Configuration:** All radar tuning parameters (such as `model`, `risk_threshold`, `fail_on_collision`, `context_window`, and test commands) are configured in the single **`.gdss.yml`** file at your repository root. This ensures your local CLI and CI runner always behave identically.
+> [!IMPORTANT]
+> **Single Action Input (`token`)**: Notice that `with:` only accepts `token`. All radar tuning parameters (such as `risk_threshold`, `fail_on_collision`, `provider`, and `model`) are configured in the single **`.gdss.yml`** file at your repository root. Do not pass `threshold` or `provider` under `with:`.
 
 ---
 
@@ -364,7 +365,7 @@ The deterministic core of GDSS — AST parsing, dependency graphs, caller/callee
 
 ### 2. 🤖 Bring Your Own Key (BYOK) AI Convergence
 GDSS is not a paid AI middleman and does not provide or subsidize cloud LLM inference. For synthesizing natural-language conflict explanations and automated 1-click reconciliation patches, GDSS uses a strict **Bring Your Own Key (BYOK)** / **Bring Your Own Compute (BYOC)** model:
-- **OpenRouter Free Tier ($0, No Credit Card):** Set `provider: "openrouter"` in `.gdss.yml` and provide `OPENROUTER_API_KEY` in GitHub Secrets. Runs capable models like `qwen/qwen-2.5-coder-32b-instruct` for free.
+- **OpenRouter Free Tier ($0, No Credit Card):** Set `provider: "openrouter"` and `model: "openrouter/free"` in `.gdss.yml` and provide `OPENROUTER_API_KEY` in GitHub Secrets. The `openrouter/free` meta-router automatically connects to active zero-cost models with coding capabilities without requiring credits. (Note: specific endpoints like `qwen/qwen-2.5-coder-32b-instruct` without a `:free` suffix are billed at standard token rates on OpenRouter).
 - **OpenAI / DeepSeek / Direct Providers:** Provide `OPENAI_API_KEY` or `DEEPSEEK_API_KEY` in GitHub Secrets. Network requests travel directly from the runner to the provider without intermediate GDSS proxies.
 - **GitHub Copilot CLI in CI:** If your organization has Copilot Business or Enterprise, set `provider: "copilot"`, add `copilot-requests: write` to your workflow permissions, and install `@github/copilot`. GDSS strictly runs Copilot with `--deny-tool='*'` so it acts purely as an inference engine to stdout and cannot edit repository files directly.
 - **Deterministic Baseline ($0 Tokens, No Keys):** If no AI keys are provided, GDSS runs completely deterministically on runner CPU, generating collision interaction tensors ($\Omega_{ij}$), risk topologies, and optimal merge order sequences.
