@@ -1,5 +1,5 @@
 name: 'GDSS PR Collision Radar'
-description: 'Detect cross-branch semantic collisions across concurrent pull requests and generate validated convergence patches'
+description: 'Detect cross-branch semantic collisions across concurrent pull requests and generate validated convergence patches (Deterministic Core + BYOK)'
 author: 'Sarthak Basnet'
 branding:
   icon: 'git-merge'
@@ -11,6 +11,11 @@ inputs:
     required: true
     default: ${{ github.token }}
 
+# GDSS operates on a Deterministic Core (0 Tokens) + Bring Your Own Key (BYOK) model.
+# The deterministic radar and merge ordering require only the GITHUB_TOKEN above.
+# For optional AI patch generation, pass your team secret via `env:` in the workflow step:
+#   env:
+#     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 runs:
   using: 'docker'
   image: 'docker://ghcr.io/sarthak2233/gdss-runner:latest'

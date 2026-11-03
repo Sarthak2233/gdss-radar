@@ -3,7 +3,8 @@
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-GDSS%20Radar-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/gdss-pr-collision-radar)
 [![Release](https://img.shields.io/github/v/release/sarthak2233/gdss-radar?style=flat-square&color=success)](https://github.com/sarthak2233/gdss-radar/releases)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Zero Token Bleed](https://img.shields.io/badge/Core-Deterministic%20$0%20Tokens-orange?style=flat-square)](#-privacy--zero-token-bleed)
+[![Deterministic Core](https://img.shields.io/badge/Core-Deterministic%20$0%20Tokens-brightgreen?style=flat-square)](#-privacy-deterministic-core--bring-your-own-key-byok)
+[![AI Model](https://img.shields.io/badge/AI%20Convergence-BYOK%20%2F%20BYOC-blue?style=flat-square)](#-privacy-deterministic-core--bring-your-own-key-byok)
 [![Docker Image](https://img.shields.io/badge/Container-GHCR%20Runner-purple?logo=docker&style=flat-square)](https://github.com/Sarthak2233/GDSS/pkgs/container/gdss-runner)
 
 > **Air Traffic Control for GitHub Pull Requests.**  
@@ -29,7 +30,7 @@
 - [🚦 Strict Merge Protection (Blocking Gate)](#-strict-merge-protection-blocking-gate)
 - [📊 What You See on Pull Requests](#-what-you-see-on-pull-requests)
 - [💻 Standalone Binary & IDE MCP Server (Cursor & Claude Code)](#-standalone-binary--ide-mcp-server-cursor--claude-code)
-- [🛡️ Privacy & Zero Token Bleed](#️-privacy--zero-token-bleed)
+- [🛡️ Privacy, Deterministic Core & Bring Your Own Key (BYOK)](#-privacy-deterministic-core--bring-your-own-key-byok)
 
 ---
 
@@ -358,14 +359,22 @@ ast:
 
 Here are the key operational principles and behaviors you should know when using GDSS Radar:
 
-### 1. 💰 $0 API Cost & Zero Token Bleed Core
-The deterministic core of GDSS — AST parsing, dependency graphs, caller/callee tracing, domain reducers, and the $\Omega_{ij}$ collision tensor — runs **100% locally on CPU within the GitHub Actions runner**. It costs **literal $0 and 0 tokens** for every repository.
+### 1. 💰 100% Free Deterministic Core ($0 & 0 Tokens)
+The deterministic core of GDSS — AST parsing, dependency graphs, caller/callee tracing, domain reducers, and the $\Omega_{ij}$ collision tensor — runs **100% locally on CPU within the GitHub Actions runner**. It costs **literal $0 and consumes 0 tokens** for every repository, requiring zero third-party API keys.
 
-### 2. 🤖 Flexible, Low-Cost AI Patch Convergence
-GDSS provides multiple zero-cost and enterprise options for synthesizing reconciliation patches:
+### 2. 🤖 Bring Your Own Key (BYOK) AI Convergence
+GDSS is not a paid AI middleman and does not provide or subsidize cloud LLM inference. For synthesizing natural-language conflict explanations and automated 1-click reconciliation patches, GDSS uses a strict **Bring Your Own Key (BYOK)** / **Bring Your Own Compute (BYOC)** model:
 - **OpenRouter Free Tier ($0, No Credit Card):** Set `provider: "openrouter"` in `.gdss.yml` and provide `OPENROUTER_API_KEY` in GitHub Secrets. Runs capable models like `qwen/qwen-2.5-coder-32b-instruct` for free.
+- **OpenAI / DeepSeek / Direct Providers:** Provide `OPENAI_API_KEY` or `DEEPSEEK_API_KEY` in GitHub Secrets. Network requests travel directly from the runner to the provider without intermediate GDSS proxies.
 - **GitHub Copilot CLI in CI:** If your organization has Copilot Business or Enterprise, set `provider: "copilot"`, add `copilot-requests: write` to your workflow permissions, and install `@github/copilot`. GDSS strictly runs Copilot with `--deny-tool='*'` so it acts purely as an inference engine to stdout and cannot edit repository files directly.
 - **Deterministic Baseline ($0 Tokens, No Keys):** If no AI keys are provided, GDSS runs completely deterministically on runner CPU, generating collision interaction tensors ($\Omega_{ij}$), risk topologies, and optimal merge order sequences.
+
+> [!TIP]
+> **How Team Credentials Work in GitHub Actions:**  
+> Does every developer on your team need an individual API key? **No.**  
+> The repository administrator configures your team's API key (e.g. `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENROUTER_API_KEY`) **once** in GitHub Repository Secrets (`Settings ➔ Secrets and variables ➔ Actions`).  
+> When any developer opens a PR, GitHub Actions automatically passes the repository secret to the runner. Individual developers never need to manage or expose personal keys.  
+> If no secret is configured, GDSS runs purely in deterministic mode ($0 & 0 tokens) and generates full collision matrices and merge orders without AI text generation.
 
 ### 3. ⚠️ Mandatory `fetch-depth: 0`
 Standard GitHub Actions checkout uses `depth: 1` (a shallow copy of only the latest commit). GDSS **requires `fetch-depth: 0`** to inspect the Git DAG, identify the common ancestor merge-base between concurrent branches, and calculate trajectory mutations ($dC$).
@@ -628,11 +637,11 @@ Your IDE AI agent gains 6 deterministic, zero-token tools:
 
 ---
 
-## 🛡️ Privacy & Zero Token Bleed
+## 🛡️ Privacy, Deterministic Core & Bring Your Own Key (BYOK)
 
-- **100% Deterministic Core:** Abstract Syntax Tree (AST) parsing, caller/callee graphs, and the pairwise collision radar run purely on the local GitHub Actions runner.
-- **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database.
-- **Bring Your Own Compute (BYOC):** AI convergence suggestions run via your own model choices: OpenRouter Free Tier, GitHub Copilot CLI in CI, Microsoft Azure AI Foundry, or direct provider API keys. GDSS charges zero token markups.
+- **100% Free Deterministic Core (0 Tokens):** Abstract Syntax Tree (AST) parsing, caller/callee graphs, and the pairwise collision radar run purely on the local GitHub Actions runner on CPU. They consume zero tokens and require no API keys.
+- **Strict Bring Your Own Key (BYOK) / BYOC:** GDSS is not an LLM reseller or paid API proxy. AI convergence suggestions run via your own model credentials configured in your repository secrets (OpenAI, DeepSeek, OpenRouter, Azure AI, or Copilot CLI). GDSS charges zero token markups.
+- **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database. API requests travel directly between the GitHub runner and your chosen model provider.
 - **No Unsolicited Telemetry:** GDSS respects developer privacy and complies with strict zero-telemetry boundaries.
 
 ---
