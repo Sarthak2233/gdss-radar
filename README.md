@@ -12,7 +12,50 @@
 
 ---
 
+### 🤖 1-Prompt Integration for AI Agents (Cursor, Claude Code, Copilot, Antigravity)
+
+Copy and paste this directive to your AI coding assistant to autonomously configure and integrate GDSS PR Collision Radar into your repository:
+
+```text
+Integrate GDSS PR Collision Radar into this repository using the authoritative sources from https://github.com/sarthak2233/gdss-radar:
+
+1. Repository Inspection:
+   - Identify our build descriptors, package managers (npm, pnpm, yarn, cargo, poetry, pip, go), test frameworks (pytest, vitest, jest, cargo test, go test), static typecheckers (mypy, tsc), and database migration directories (alembic, prisma, django, drizzle, rails, flyway).
+   - Identify our primary landing branch (main or develop).
+
+2. Fetch Reference Specs & Schemas:
+   - Consult the official configuration guide and examples at:
+     https://raw.githubusercontent.com/sarthak2233/gdss-radar/main/.gdss.yml.example
+     https://raw.githubusercontent.com/sarthak2233/gdss-radar/main/docs/CONFIGURATION_GUIDE.md
+
+3. Create Repository Configuration (.gdss.yml):
+   - Create .gdss.yml in the repository root with `version: 1`.
+   - Configure `validation:` section with:
+     * `mode: "targeted"`
+     * `symlink_dependencies: true`
+     * Tailored `test_command` (using {test_file} or {file} placeholder)
+     * Tailored `typecheck_command` (if static typechecker is present)
+     * Optional `install_command` if needed for ephemeral worktrees.
+   - If database migrations exist, configure `migrations:` section with framework hint and paths.
+   - Configure `hierarchy:` with `reference_branch` matching our default branch and `same_base_only: true`.
+   - Configure `ast:` with appropriate `exclude_patterns`.
+
+4. Create GitHub Actions CI Workflow:
+   - Create `.github/workflows/gdss-radar.yml` triggering on `pull_request: [opened, synchronize, reopened]`.
+   - Use `actions/checkout@v4` with `fetch-depth: 0` (mandatory for Git DAG merge-base resolution).
+   - Invoke `sarthak2233/gdss-radar@v1.1.1` (or `@v1`) with `token: ${{ secrets.GITHUB_TOKEN }}`.
+   - Set concurrency group `gdss-radar-${{ github.event.pull_request.number }}` with `cancel-in-progress: true`.
+   - Add permissions: `contents: read`, `pull-requests: write`, `issues: write`.
+
+5. Verification:
+   - Verify that .gdss.yml is valid YAML and the workflow syntax is clean.
+   - Do NOT modify any existing application code or logic.
+```
+
+---
+
 ## 📑 Table of Contents
+- [🤖 1-Prompt Integration for AI Agents](#-1-prompt-integration-for-ai-agents-cursor-claude-code-copilot-antigravity)
 - [📚 Documentation Library](#-documentation-library)
 - [🎯 The Problem: Single-PR Blindness](#-the-problem-single-pr-blindness)
 - [🔬 How It Works: The 7 Intelligence Layers](#-how-it-works-the-7-intelligence-layers)
@@ -180,7 +223,7 @@ jobs:
           fetch-depth: 0  # CRITICAL: Required for 3-way DAG & merge-base resolution
 
       - name: Run GDSS PR Collision Radar
-        uses: sarthak2233/gdss-radar@v1.1.0  # Or @v1
+        uses: sarthak2233/gdss-radar@v1.1.1  # Or @v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
@@ -200,7 +243,7 @@ jobs:
 | `permissions: contents: read` | Grants the runner permission to read repository files and Git tree commits. | Action fails at startup when checking out repository files. |
 | `permissions: pull-requests: write`<br>`permissions: issues: write` | Grants permission to post and update the sticky Markdown collision radar report directly on the incoming pull request. | Action calculates collisions but crashes when attempting to post the sticky report comment to the PR. |
 | `uses: actions/checkout@v4`<br>`with: fetch-depth: 0` | **Mandatory requirement.** Clones the entire Git commit history rather than a shallow single commit (`depth: 1`). | **Fatal Failure:** GDSS cannot resolve the common merge-base ancestor between concurrent PR branches, causing DAG trajectory calculation to abort. |
-| `uses: sarthak2233/gdss-radar@v1.1.0`<br>*(or `@v1`)* | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner:v1`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
+| `uses: sarthak2233/gdss-radar@v1.1.1`<br>*(or `@v1`)* | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner:v1`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
 | `with.token: ${{ secrets.GITHUB_TOKEN }}` | **The only action input.** Built-in GitHub token automatically provided to every Actions workflow. Used strictly to discover concurrent PRs and post/update the sticky radar comment. | Action cannot query GitHub REST API to discover concurrent pull requests or post sticky report comments. |
 | `env.OPENROUTER_API_KEY`<br>*(Optional)* | Passes your team's secret into the runner for AI convergence patch generation (BYOK). | If omitted, GDSS runs purely in deterministic mode ($0 & 0 tokens), outputting the collision radar and merge order without AI text patches. |
 
@@ -260,6 +303,9 @@ Save this file as **`.gdss.yml`** in the **root** of your repository:
 # ==============================================================================
 # Check this file into repository root so local CLI and CI share identical rules.
 
+# Configuration schema version
+version: 1
+
 # ------------------------------------------------------------------------------
 # 1. AI Convergence & PR Collision Radar
 # ------------------------------------------------------------------------------
@@ -277,6 +323,9 @@ radar:
 # 2. Ephemeral Sandbox Validation
 # ------------------------------------------------------------------------------
 validation:
+  mode: "targeted"         # "targeted" (filtered to changed files) or "full_suite"
+  symlink_dependencies: true # Symlink parent dependencies (node_modules, .venv) into worktree
+  # install_command: "npm ci" # Optional install command when manifests change
   test_command: "npm test -- {test_file}"
   typecheck_command: "npx tsc --noEmit"
   timeout_seconds: 60
@@ -315,11 +364,29 @@ ast:
     - "build/**"
     - "vendor/**"
     - ".venv/**"
+
+# ------------------------------------------------------------------------------
+# 5. Database Migration Reducer (Universal Multi-Stack DAG Intelligence)
+# ------------------------------------------------------------------------------
+migrations:
+  # Framework hint (optional): "alembic", "django", "prisma", "drizzle", "flyway", "rails", "knex", "typeorm", "goose", "atlas"
+  # When omitted, GDSS applies universal timestamp/sequence pattern matching.
+  # framework: "alembic"
+  paths:
+    - "migrations/**"
+    - "alembic/versions/**"
+    - "db/migrate/**"
+    - "prisma/migrations/**"
 ```
 
 ---
 
 ### 🔍 Detailed Schema Reference & Field Breakdown
+
+#### Section 0: Root Directives
+| Field | Type | Default | What It Does & Recommended Values |
+| :--- | :--- | :--- | :--- |
+| `version` | `integer` | `1` | Schema version indicator. Guarantees backwards-compatible schema parsing. |
 
 #### Section 1: `radar` (AI Convergence & Collision Detection)
 | Field | Type | Default | What It Does & Recommended Values |
@@ -334,6 +401,9 @@ ast:
 #### Section 2: `validation` (Ephemeral Worktree Sandbox)
 | Field | Type | Default | What It Does & Recommended Values |
 | :--- | :--- | :--- | :--- |
+| `mode` | `string` | `"targeted"` | Validation scope: `"targeted"` (constrains test/typecheck runs strictly to changed files / targeted tests) or `"full_suite"` (runs unconstrained suite). |
+| `symlink_dependencies` | `boolean` | `true` | When `true`, automatically symlinks root and subpackage dependency directories (`node_modules`, `.venv`, `vendor`) from parent repo into ephemeral worktrees if manifests are untouched. |
+| `install_command` | `string \| null` | `null` | Shell command executed inside the ephemeral worktree prior to typecheck and tests (e.g. `npm ci`, `poetry install`). |
 | `test_command` | `string` | `""` | Command to execute targeted unit tests in the isolated sandbox. Supports `{test_file}` interpolation (e.g. `pytest {test_file}`, `npm test -- {test_file}`). |
 | `typecheck_command` | `string` | `""` | Command to verify static types or lint rules in the sandbox. Supports `{file}` interpolation (e.g. `npx tsc --noEmit`, `mypy {file}`, `cargo check`). |
 | `timeout_seconds` | `integer` | `60` | Hard timeout ceiling for test execution in the ephemeral sandbox worktree to prevent hangs. |
@@ -353,6 +423,12 @@ ast:
 | :--- | :--- | :--- | :--- |
 | `additional_extensions` | `list` | `[]` | Additional file extensions mapped to AST or Domain Reducer parsers (e.g. `[".vue", ".svelte", ".sol"]`). |
 | `exclude_patterns` | `list` | `[]` | File paths to exclude from symbol parsing and collision computation (e.g. `["node_modules/**", "dist/**", ".venv/**"]`). |
+
+#### Section 5: `migrations` (Universal Multi-Stack DAG Reducer)
+| Field | Type | Default | What It Does & Recommended Values |
+| :--- | :--- | :--- | :--- |
+| `framework` | `string \| null` | `null` | Framework hint (`"alembic"`, `"django"`, `"prisma"`, `"drizzle"`, `"flyway"`, `"rails"`, `"knex"`, `"typeorm"`, `"goose"`, `"atlas"`). When omitted, universal timestamp and sequence matching is used. |
+| `paths` | `list` | `["migrations/**", ...]` | Glob patterns where database migrations reside for DAG split-head collision detection. |
 
 ---
 
