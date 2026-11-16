@@ -763,13 +763,15 @@ claude mcp add gdss -- gdss mcp
 ```
 
 ### 🛠️ What Your AI Assistant Can Do:
-Your IDE AI agent gains 6 deterministic, zero-token tools:
+Your IDE AI agent gains 8 deterministic, zero-token tools:
 - `gdss_find_collisions`: Checks your active branch against teammates' open branches.
 - `gdss_get_merge_order`: Computes mathematically optimal branch landing sequence.
-- `gdss_inspect_symbol_impact`: Traces blast radius of any function or class refactor.
+- `gdss_inspect_symbol_impact`: Traces callers, contracts, and verifying tests (2-hop SIC).
+- `gdss_get_impact_closure`: Computes 2-hop Semantic Impact Closure with token budget pruning.
 - `gdss_plan_semantic_rebase`: Rebase recommendations distinguishing signature shifts from noise.
-- `gdss_sandbox_validate_patch`: Tests candidate patches in ephemeral Git worktrees.
-- `gdss_validate_patch`: Instant syntax and static type verification.
+- `gdss_validate_patch`: Multi-file, multi-language Tree-sitter AST and in-memory diff validation.
+- `gdss_sandbox_validate_patch`: Tests candidate patches in ephemeral Git worktrees with structured diagnostics ($E_k$).
+- `gdss_check_anti_gaming`: Audits test modifications against assertion-preservation invariants.
 
 ---
 
