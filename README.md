@@ -741,13 +741,16 @@ Your IDE AI agent gains 6 deterministic, zero-token tools:
 
 GDSS is distributed under a **Closed-Engine, Free-Action** commercial model (similar to SonarQube, Snyk, and Codecov). We believe that pull request collision radar and repository intelligence should be accessible to every developer and engineering team without cost friction:
 
+> [!NOTE]
+> **Licensing Architecture**: This GitHub Action wrapper (`gdss-radar`) is open source under the [MIT License](LICENSE). The underlying runner container engine (`ghcr.io/sarthak2233/gdss-runner`) is governed by the **GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)**, free for organizations with up to 20 active Git contributors.
+
 | Plan | Pricing | Target Audience | What is Included |
 | :--- | :---: | :--- | :--- |
-| **Community / Open Source** | **$0 / Free Forever** | Individual developers, OSS maintainers, and public/private GitHub repositories | • **100% Free Deterministic Core** ($0 & 0 tokens charged by GDSS)<br>• Unlimited pull request collision radar audits<br>• Full pairwise interaction tensor ($\Omega_{ij}$)<br>• Multi-asset reducers (manifests, database migrations, SQL)<br>• Monorepo subpackage intelligence & worktree caching<br>• Bring Your Own Key (BYOK) AI convergence suggestions<br>• Standalone CLI & IDE MCP Server (Cursor, Claude Code, Copilot) |
-| **Team & Organization** | **Contact / Early Access** | Scaling engineering teams managing multi-repo microservices | • **Cross-Repository Collision Radar** (audits API contract breaks across multiple microservice repos *before* deploy)<br>• Centralized branch landing policies & merge queues<br>• Dedicated managed cloud runners (zero GitHub Actions minute consumption)<br>• SOC2 compliance audit logs, SSO/SAML, & Enterprise SLA |
+| **Community / Open Source** | **$0 / Free Forever** | Organizations with up to 20 active Git contributors, individual developers, and OSS projects | • **100% Free Deterministic Core** ($0 & 0 tokens charged by GDSS)<br>• Unlimited pull request collision radar audits<br>• Full pairwise interaction tensor ($\Omega_{ij}$)<br>• Multi-asset reducers (manifests, database migrations, SQL)<br>• Monorepo subpackage intelligence & worktree caching<br>• Bring Your Own Key (BYOK) AI convergence suggestions<br>• Standalone CLI & IDE MCP Server (Cursor, Claude Code, Copilot) |
+| **Team & Organization** | **Contact / Early Access** | Scaling engineering teams managing multi-repo microservices or teams > 20 contributors | • **Cross-Repository Collision Radar** (audits API contract breaks across multiple microservice repos *before* deploy)<br>• Centralized branch landing policies & merge queues<br>• Dedicated managed cloud runners (zero GitHub Actions minute consumption)<br>• Private modification waivers, SOC2 audit logs, SSO/SAML, & Enterprise SLA |
 
 > 💬 **Enterprise & Multi-Repo Inquiries:**  
-> To discuss multi-repository microservice collision radar or organization governance for your team, start a thread on [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions).
+> To discuss multi-repository microservice collision radar, private modification waivers, or organization governance for your team, start a thread on [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions).
 
 ---
 
@@ -763,4 +766,4 @@ GDSS is distributed under a **Closed-Engine, Free-Action** commercial model (sim
 ## 📄 License
 
 This GitHub Action wrapper and starter configurations are licensed under the [MIT License](LICENSE).  
-The underlying analysis engine is powered by Gate Distributive Semantic Synopsis (GDSS).
+The underlying analysis engine is powered by Gate Distributive Semantic Synopsis (GDSS), licensed under the [GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)](https://github.com/Sarthak2233/GDSS/blob/main/LICENSE.md).
