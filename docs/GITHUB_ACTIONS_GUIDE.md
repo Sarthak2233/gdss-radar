@@ -104,16 +104,6 @@ jobs:
 >
 > **AI Convergence Suggestions (Strict BYOK)**: To generate natural-language conflict explanations and automated 1-click reconciliation patches, the repository maintainer provides their chosen provider key (e.g. `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENROUTER_API_KEY`) as a GitHub Repository Secret. Developers opening PRs never need personal keys.
 
-> [!TIP]
-> **Sandboxed Validation for .NET, Rust, and Node Projects**:
-> When using ephemeral sandbox validation (`test_command` or `typecheck_command`), ensure the runner environment provides your stack's build tools (e.g. `actions/setup-dotnet@v4` for .NET, `actions/setup-node@v4` for Node, or `dtolnay/rust-toolchain@master` for Rust) before the GDSS step:
-> ```yaml
->       - name: Set up .NET SDK
->         uses: actions/setup-dotnet@v4
->         with:
->           dotnet-version: '8.0.x'
-> ```
-
 ### Method 2: Custom / Self-Hosted Runner Workflow
 
 For private self-hosted runners or environments where you build from source:
@@ -187,6 +177,21 @@ validation:
   typecheck_command: "mypy ."
   # Sandbox execution timeout in seconds
   timeout_seconds: 45
+  # Test anti-gaming enforcement (forbids dropping assertions to make failing tests pass)
+  anti_gaming_strict: true
+  allow_callsite_updates: true
+
+# Deterministic Semantic Impact Closure (SIC)
+impact_closure:
+  max_hops: 2
+  relevance_threshold: 0.70
+  token_budget: 4000
+  test_patterns:
+    - "tests/**"
+    - "spec/**"
+  contract_patterns:
+    - "proto/**"
+    - "schemas/**/*.json"
 
 # Branch hierarchy and scoping (scopes collision radar to relevant PRs)
 hierarchy:
@@ -228,6 +233,13 @@ ast:
 | `radar.max_refinements` | `integer` | `2` | Maximum agentic self-correction attempts inside ephemeral sandbox worktrees before halting. |
 | `radar.risk_threshold` | `float` | `0.8` | The numeric collision risk cutoff score between `0.0` and `1.0`. |
 | `radar.fail_on_collision` | `boolean` | `false` | When `true`, the workflow exits with code `1` if $\Omega_{ij} \ge \text{risk threshold}$, blocking the merge button. |
+| `validation.anti_gaming_strict` | `boolean` | `true` | When `true`, strictly blocks any candidate patch from deleting test assertions to make failing tests pass. |
+| `validation.allow_callsite_updates` | `boolean` | `true` | When `true`, permits adapting test call-site signatures to match refactored functions without anti-gaming penalty. |
+| `impact_closure.max_hops` | `integer` | `2` | Maximum depth of reverse caller graph traversal ($C_0 \rightarrow D(C_0) \rightarrow \text{transitive callers}$). |
+| `impact_closure.relevance_threshold` | `float` | `0.70` | Relevance edge-weight cutoff ($0.0$ to $1.0$). Distant or weak caller edges below this cutoff are pruned. |
+| `impact_closure.token_budget` | `integer` | `4000` | Context token budget ceiling for semantic impact closure packaging. |
+| `impact_closure.test_patterns` | `list[str]` | `[]` | Explicit glob patterns for test files (Tier 1 Primary Authority, evaluated before built-in heuristics). |
+| `impact_closure.contract_patterns` | `list[str]` | `[]` | Explicit glob patterns for API schemas, IDLs, and interface definitions (Tier 1 Primary Authority). |
 | `hierarchy.same_base_only` | `boolean` | `true` | Only audit PRs targeting the exact same base landing branch (e.g. `develop`), eliminating false-positive alarms across separate release tracks. |
 | `hierarchy.include` | `list[str]` | `[]` | Glob patterns or PR branch names/numbers included in collision radar audits. |
 | `hierarchy.exclude` | `list[str]` | `[]` | Glob patterns or PR branch names/numbers excluded from audits (e.g. `["spike/*", "dependabot/*"]`). |
@@ -339,7 +351,7 @@ Passing the base branch plus 5 or 10 concurrent PR branches simultaneously into 
 
 #### The 5-Step Pairwise 3-Way Batch Pipeline
 
-To eliminate these failure modes while keeping CI execution unified, GDSS PR Collision Radar uses a structured pairwise batching loop:
+To eliminate these failure modes while keeping CI execution unified, [`audit_pr_workflow()`](file:///home/sarakb/projects/GDSS/gdss/validation/pr_audit.py) uses a structured pairwise batching loop:
 
 1. **Autonomous Concurrent PR Discovery:**  
    When PR #42 triggers the workflow, GDSS queries GitHub's REST API (`GET /repos/{owner}/{repo}/pulls?state=open`) to discover all open pull requests targeting `main`. PRs matching exclusion patterns in `.gdss.yml` (e.g. `dependabot/*`, `archive/*`) or differing target base branches are pruned automatically.
@@ -350,9 +362,9 @@ To eliminate these failure modes while keeping CI execution unified, GDSS PR Col
    - **Triangle 1:** Base Attractor (`main`) vs Incoming PR #42 vs Concurrent PR #41
    - **Triangle 2:** Base Attractor (`main`) vs Incoming PR #42 vs Concurrent PR #39
    
-   GDSS extracts only the exact AST symbol definitions across the 3 versions ($V_{base}, V_{incoming}, V_{concurrent}$), line numbers, and impacted callers.
+   Using [`extract_3way_symbol_context()`](file:///home/sarakb/projects/GDSS/gdss/ai/context_builder.py), GDSS extracts only the exact AST symbol definitions across the 3 versions ($V_{base}, V_{incoming}, V_{concurrent}$), line numbers, and impacted callers.
 4. **Sandboxed Validation in Ephemeral Worktrees:**  
-   For each triangle, GDSS synthesizes a minimal replacement block or unified diff, checks out an isolated ephemeral Git worktree, applies the candidate patch, and verifies syntax, types, and targeted unit tests. If verification fails, the agentic refinement loop self-corrects up to `max_refinements` (default 2 retries).
+   For each triangle, [`build_conflict_prompt()`](file:///home/sarakb/projects/GDSS/gdss/ai/prompt_builder.py) requests a minimal replacement block or unified diff. GDSS checks out an isolated Git worktree (`/tmp/gdss-sandbox-...`), applies the patch, and verifies syntax, types (`mypy`), and targeted unit tests. If verification fails, the agentic refinement loop self-corrects up to `max_refinements` (default 2 retries).
 5. **Single Unified Sticky Radar Report:**  
    All evaluated pairs (both clear and colliding) are aggregated into a single, comprehensive sticky Markdown report posted to the incoming PR:
 

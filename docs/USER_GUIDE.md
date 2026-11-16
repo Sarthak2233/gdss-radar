@@ -316,6 +316,19 @@ validation:
   test_command: "pytest {test_file}"
   typecheck_command: "mypy {file}"
   timeout_seconds: 60
+  anti_gaming_strict: true
+  allow_callsite_updates: true
+
+impact_closure:
+  max_hops: 2
+  relevance_threshold: 0.70
+  token_budget: 4000
+  test_patterns:
+    - "tests/**"
+    - "spec/**"
+  contract_patterns:
+    - "proto/**"
+    - "schemas/**/*.json"
 
 ast:
   additional_extensions:
@@ -466,20 +479,6 @@ When candidate reconciliation patches are synthesized, GDSS compiles and validat
 > 📖 **Full Configuration Guide:** See [`docs/CONFIGURATION_GUIDE.md`](CONFIGURATION_GUIDE.md) for detailed directives, provider-specific recipes (Ollama, vLLM, OpenRouter, OpenAI, Azure AI Foundry), and context window allocation strategies.
 >
 > 🌐 **Universal Multi-Asset & Reducers Guide:** See [`docs/UNIVERSAL_MULTI_ASSET_GUIDE.md`](UNIVERSAL_MULTI_ASSET_GUIDE.md) for in-depth coverage of non-code asset support (manifests, migration split-head DAGs, DDL schemas, and lockfile synchronization).
-
----
-
-## 💰 Pricing & Commercial Model
-
-GDSS operates on a **Closed-Engine, Free-Action** model:
-
-| Plan | Pricing | Target Audience | What is Included |
-| :--- | :---: | :--- | :--- |
-| **Community / Open Source** | **$0 / Free Forever** | Individual developers, OSS maintainers, and public/private GitHub repos | • **100% Free Deterministic Core** ($0 & 0 tokens charged by GDSS)<br>• Unlimited pull request collision radar audits<br>• Full pairwise interaction tensor ($\Omega_{ij}$)<br>• Multi-asset reducers (manifests, database migrations, SQL)<br>• Monorepo subpackage intelligence & worktree caching<br>• Bring Your Own Key (BYOK) AI convergence suggestions<br>• Standalone CLI & IDE MCP Server (Cursor, Claude Code, Copilot) |
-| **Team & Organization** | **Contact / Early Access** | Scaling engineering teams managing multi-repo microservices | • **Cross-Repository Collision Radar** (audits API contract breaks across multiple microservice repos *before* deploy)<br>• Centralized branch landing policies & merge queues<br>• Dedicated managed cloud runners (zero GitHub Actions minute consumption)<br>• SOC2 compliance audit logs, SSO/SAML, & Enterprise SLA |
-
-> 💬 **Enterprise & Multi-Repo Inquiries:**  
-> Start a discussion on [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions).
 
 ---
 

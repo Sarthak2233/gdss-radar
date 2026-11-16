@@ -333,9 +333,30 @@ validation:
   test_command: "npm test -- {test_file}"
   typecheck_command: "npx tsc --noEmit"
   timeout_seconds: 60
+  anti_gaming_strict: true # Strictly forbid deleting assertions to force failing tests to pass
+  allow_callsite_updates: true # Allow adapting test call-site signatures to match refactored functions
 
 # ------------------------------------------------------------------------------
-# 3. Branch Hierarchy & Flight Boundaries
+# 3. Deterministic Semantic Impact Closure (SIC) Engine
+# ------------------------------------------------------------------------------
+# Transitive blast radius expansion across reverse call graphs to find affected callers,
+# contracts, and test suites. Follows Two-Tier Precedence (Explicit Globs > Built-in Heuristics).
+impact_closure:
+  max_hops: 2             # Reverse caller depth (default: 2)
+  relevance_threshold: 0.70 # Minimum edge-weight cutoff for transitive caller inclusion
+  token_budget: 4000      # Token ceiling for packaging closure context
+  # Explicit glob overrides (Tier 1 Primary Authority)
+  test_patterns:
+    - "tests/**"
+    - "spec/**"
+    - "e2e/**/*.spec.ts"
+  contract_patterns:
+    - "proto/**"
+    - "schemas/**/*.json"
+    - "src/contracts/**"
+
+# ------------------------------------------------------------------------------
+# 4. Branch Hierarchy & Flight Boundaries
 # ------------------------------------------------------------------------------
 hierarchy:
   reference_branch: "main"
@@ -355,7 +376,7 @@ hierarchy:
     - "develop"
 
 # ------------------------------------------------------------------------------
-# 4. AST Symbol & Path Filtering
+# 5. AST Symbol & Path Filtering
 # ------------------------------------------------------------------------------
 ast:
   additional_extensions:
@@ -370,7 +391,7 @@ ast:
     - ".venv/**"
 
 # ------------------------------------------------------------------------------
-# 5. Database Migration Reducer (Universal Multi-Stack DAG Intelligence)
+# 6. Database Migration Reducer (Universal Multi-Stack DAG Intelligence)
 # ------------------------------------------------------------------------------
 migrations:
   # Framework hint (optional): "alembic", "django", "prisma", "drizzle", "flyway", "rails", "knex", "typeorm", "goose", "atlas"
@@ -411,8 +432,23 @@ migrations:
 | `test_command` | `string` | `""` | Command to execute targeted unit tests in the isolated sandbox. Supports `{test_file}` interpolation (e.g. `pytest {test_file}`, `npm test -- {test_file}`). |
 | `typecheck_command` | `string` | `""` | Command to verify static types or lint rules in the sandbox. Supports `{file}` interpolation (e.g. `npx tsc --noEmit`, `mypy {file}`, `cargo check`). |
 | `timeout_seconds` | `integer` | `60` | Hard timeout ceiling for test execution in the ephemeral sandbox worktree to prevent hangs. |
+| `anti_gaming_strict` | `boolean` | `true` | When `true`, strictly forbids the convergence engine from deleting or dropping test assertions to force a failing test to pass. |
+| `allow_callsite_updates` | `boolean` | `true` | When `true`, permits adapting test call-site invocations to updated function signatures (e.g. adding required arguments) without triggering anti-gaming penalties. |
 
-#### Section 3: `hierarchy` (Branch Selection & Attractor Precedence)
+#### Section 3: `impact_closure` (Deterministic Semantic Impact Closure)
+Computes the transitive blast radius around conflict symbols ($C_0$). Follows the **Two-Tier Precedence Strategy**:
+- **Tier 1 (Explicit Configuration)**: Glob patterns defined in `.gdss.yml` take primary authority.
+- **Tier 2 (Final Resort / Built-in Heuristics)**: If omitted or unmatched, GDSS automatically applies built-in multi-language indicators (supporting Python, TS/JS, Go, Rust, C#, Java, C/C++).
+
+| Field | Type | Default | What It Does & Recommended Values |
+| :--- | :--- | :--- | :--- |
+| `max_hops` | `integer` | `2` | Maximum depth of reverse caller graph traversal ($C_0 \rightarrow D(C_0) \rightarrow \text{transitive callers}$). |
+| `relevance_threshold` | `float` | `0.70` | Relevance edge-weight cutoff ($0.0$ to $1.0$). Distant or weak caller edges below this cutoff are pruned from convergence prompts. |
+| `token_budget` | `integer` | `4000` | Context token ceiling for semantic impact closure packaging. Pruned via Knapsack prioritization ($C_0 > \text{Tests} > \text{Direct Callers} > \text{Transitive Callers}$). |
+| `test_patterns` | `list` | `[]` | Explicit glob patterns for test files (e.g. `["tests/**", "spec/**", "e2e/**/*.spec.ts"]`). Evaluated **before** built-in heuristics. |
+| `contract_patterns` | `list` | `[]` | Explicit glob patterns for API schemas, IDLs, and interface definitions (e.g. `["proto/**", "schemas/**/*.json"]`). Evaluated **before** built-in heuristics. |
+
+#### Section 4: `hierarchy` (Branch Selection & Attractor Precedence)
 | Field | Type | Default | What It Does & Recommended Values |
 | :--- | :--- | :--- | :--- |
 | `reference_branch` | `string` | `"main"` | The primary attractor base branch against which feature branches are audited. |
@@ -422,13 +458,13 @@ migrations:
 | `exclude` | `list` | `[]` | Glob patterns of branch names to ignore (e.g. `["dependabot/*", "renovate/*", "spike/*"]`). |
 | `target_bases` | `list` | `["main"]` | Specific base branches that activate collision auditing when targeted by incoming PRs. |
 
-#### Section 4: `ast` (Syntax Parsing & Exclusions)
+#### Section 5: `ast` (Syntax Parsing & Exclusions)
 | Field | Type | Default | What It Does & Recommended Values |
 | :--- | :--- | :--- | :--- |
 | `additional_extensions` | `list` | `[]` | Additional file extensions mapped to AST or Domain Reducer parsers (e.g. `[".vue", ".svelte", ".sol"]`). |
 | `exclude_patterns` | `list` | `[]` | File paths to exclude from symbol parsing and collision computation (e.g. `["node_modules/**", "dist/**", ".venv/**"]`). |
 
-#### Section 5: `migrations` (Universal Multi-Stack DAG Reducer)
+#### Section 6: `migrations` (Universal Multi-Stack DAG Reducer)
 | Field | Type | Default | What It Does & Recommended Values |
 | :--- | :--- | :--- | :--- |
 | `framework` | `string \| null` | `null` | Framework hint (`"alembic"`, `"django"`, `"prisma"`, `"drizzle"`, `"flyway"`, `"rails"`, `"knex"`, `"typeorm"`, `"goose"`, `"atlas"`). When omitted, universal timestamp and sequence matching is used. |
