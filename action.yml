@@ -13,9 +13,11 @@ inputs:
 
 # GDSS operates on a Deterministic Core (0 Tokens) + Bring Your Own Key (BYOK) model.
 # The deterministic radar and merge ordering require only the GITHUB_TOKEN above.
-# For optional AI patch generation, pass your team secret via `env:` in the workflow step:
+# For optional AI patch generation, pass your secret via `env:` in the workflow step.
+# We explicitly recommend using OpenRouter with GDSS_API_KEY for isolated credentials:
 #   env:
-#     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#     GDSS_API_KEY: ${{ secrets.GDSS_API_KEY }}  # Recommended: OpenRouter or BYOK key
+#     # or OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 runs:
   using: 'docker'
   image: 'docker://ghcr.io/sarthak2233/gdss-runner:v1'

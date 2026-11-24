@@ -10,6 +10,9 @@
 > **Air Traffic Control for GitHub Pull Requests.**  
 > Automatically detects cross-branch semantic collisions across all concurrently open PRs, tests candidate reconciliations in ephemeral sandboxes, and posts a single sticky Markdown radar report with 1-click **"Commit suggestion"** blocks.
 
+> [!TIP]
+> **Recommended AI Setup for Convergence Patches**: We explicitly recommend using **[OpenRouter](https://openrouter.ai)** (`provider: "openrouter"`, `model: "openrouter/free"` or Claude/DeepSeek) authenticated via the dedicated **`GDSS_API_KEY`** secret. OpenRouter requires zero credit card setup for its free tier and grants single-key access to 100+ models. Using `GDSS_API_KEY` guarantees that GDSS credentials never collide with or burn your application's existing `.env` or CI secrets.
+
 ---
 
 ### 🤖 1-Prompt Integration for AI Agents (Cursor, Claude Code, Copilot, Antigravity)
@@ -30,6 +33,11 @@ Integrate GDSS PR Collision Radar into this repository using the authoritative s
 
 3. Create Repository Configuration (.gdss.yml):
    - Create .gdss.yml in the repository root with `version: 1`.
+   - Configure `radar:` section with:
+     * `provider: "openrouter"` (explicitly recommended multi-model gateway)
+     * `model: "openrouter/free"` (or "anthropic/claude-3.5-sonnet", "deepseek/deepseek-chat")
+     * `context_window: 128000` (or matching model token limit)
+     * `api_key_env: "GDSS_API_KEY"` (dedicated key variable to prevent secret collision)
    - Configure `validation:` section with:
      * `mode: "targeted"`
      * `symlink_dependencies: true`
@@ -44,6 +52,7 @@ Integrate GDSS PR Collision Radar into this repository using the authoritative s
    - Create `.github/workflows/gdss-radar.yml` triggering on `pull_request: [opened, synchronize, reopened]`.
    - Use `actions/checkout@v4` with `fetch-depth: 0` (mandatory for Git DAG merge-base resolution).
    - Invoke `sarthak2233/gdss-radar@v1.1.1` (or `@v1`) with `token: ${{ secrets.GITHUB_TOKEN }}`.
+   - Set env with `GDSS_API_KEY: ${{ secrets.GDSS_API_KEY }}` (or `OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}`).
    - Set concurrency group `gdss-radar-${{ github.event.pull_request.number }}` with `cancel-in-progress: true`.
    - Add permissions: `contents: read`, `pull-requests: write`, `issues: write`.
 
@@ -232,8 +241,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           # Optional: Bring Your Own Key for AI suggestions (omit for 100% deterministic $0 radar)
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          # or OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # RECOMMENDED: Set GDSS_API_KEY using OpenRouter (or OPENROUTER_API_KEY):
+          GDSS_API_KEY: ${{ secrets.GDSS_API_KEY }}
+          # or: OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 ```
 
 ---
@@ -249,7 +259,7 @@ jobs:
 | `uses: actions/checkout@v4`<br>`with: fetch-depth: 0` | **Mandatory requirement.** Clones the entire Git commit history rather than a shallow single commit (`depth: 1`). | **Fatal Failure:** GDSS cannot resolve the common merge-base ancestor between concurrent PR branches, causing DAG trajectory calculation to abort. |
 | `uses: sarthak2233/gdss-radar@v1.1.1`<br>*(or `@v1`)* | Runs the pre-compiled container image (`ghcr.io/sarthak2233/gdss-runner:v1`) directly on GitHub's Ubuntu runner. | **Zero Setup:** No Python installation, no virtual environment creation, and no pip build overhead required. |
 | `with.token: ${{ secrets.GITHUB_TOKEN }}` | **The only action input.** Built-in GitHub token automatically provided to every Actions workflow. Used strictly to discover concurrent PRs and post/update the sticky radar comment. | Action cannot query GitHub REST API to discover concurrent pull requests or post sticky report comments. |
-| `env.OPENROUTER_API_KEY`<br>*(Optional)* | Passes your team's secret into the runner for AI convergence patch generation (BYOK). | If omitted, GDSS runs purely in deterministic mode ($0 & 0 tokens), outputting the collision radar and merge order without AI text patches. |
+| `env.GDSS_API_KEY`<br>*(or `env.OPENROUTER_API_KEY`)* | **Recommended standard.** Passes your secret into the runner for AI convergence patch generation (BYOK). Using `GDSS_API_KEY` isolates GDSS credentials from your existing project `.env` or application secrets. | If omitted, GDSS runs purely in deterministic mode ($0 & 0 tokens), outputting the collision radar and merge order without AI text patches. |
 
 > [!IMPORTANT]
 > **Single Action Input (`token`)**: Notice that `with:` only accepts `token`. All radar tuning parameters (such as `risk_threshold`, `fail_on_collision`, `provider`, and `model`) are configured in the single **`.gdss.yml`** file at your repository root. Do not pass `threshold` or `provider` under `with:`.
@@ -314,9 +324,16 @@ version: 1
 # 1. AI Convergence & PR Collision Radar
 # ------------------------------------------------------------------------------
 radar:
-  model: "gpt-4o"
+  # Inference provider backend: "openrouter" is explicitly recommended (multi-model gateway, $0 free tier, no credit card required)
+  provider: "openrouter"  # "openrouter" (recommended), "deepseek", "groq", "together", "mistral", "anthropic", "gemini", "cohere", "perplexity", "openai", "azure", "copilot", "ollama", "vllm", "lm-studio", "localai", "openai-compatible"
+  # Model name on provider:
+  # - "openrouter/free" (zero-cost router, no credit card required)
+  # - "anthropic/claude-3.5-sonnet", "deepseek/deepseek-chat", "gpt-4o", "meta-llama/llama-3.3-70b-instruct"
+  model: "openrouter/free"
   context_window: 128000  # Explicit token ceiling (MANDATORY BEST PRACTICE)
-  provider: "openrouter"  # "openrouter" (default), "deepseek", "groq", "together", "mistral", "anthropic", "openai", "azure", "copilot", "ollama", "vllm", "lm-studio", "localai", "openai-compatible"
+  # Dedicated API key variable name (optional).
+  # Setting GDSS_API_KEY in .env or CI secrets isolates GDSS credentials from your application's own keys.
+  api_key_env: "GDSS_API_KEY"
   risk_threshold: 0.1     # Sensitivity: 0.05 (sensitive) to 0.25 (strict)
   max_refinements: 2      # Sandboxed self-correction loops on compiler errors
   concurrency_limit: 4    # Concurrent worker threads for parallel conflict drafting
@@ -416,9 +433,10 @@ migrations:
 #### Section 1: `radar` (AI Convergence & Collision Detection)
 | Field | Type | Default | What It Does & Recommended Values |
 | :--- | :--- | :--- | :--- |
-| `model` | `string` | `"gpt-4o"` | The model ID used for semantic patch reconciliation. Common choices: `"gpt-4o"`, `"gpt-4o-mini"`, `"deepseek-chat"`, `"claude-3-5-sonnet-20241022"`, `"llama-3.3-70b-versatile"`. |
+| `provider` | `string` | `"openrouter"` | **Explicitly recommended backend:** `"openrouter"` (multi-model gateway, $0 free tier via `openrouter/free`, single key for 100+ models). Also supports `"copilot"` (GitHub Copilot CLI via `GITHUB_TOKEN`), `"azure"`, `"openai"`, `"deepseek"`, `"groq"`, `"ollama"`. |
+| `model` | `string` | `"openrouter/free"` | The model ID used for semantic patch reconciliation. Common choices: `"openrouter/free"`, `"anthropic/claude-3.5-sonnet"`, `"deepseek/deepseek-chat"`, `"gpt-4o"`, `"meta-llama/llama-3.3-70b-instruct"`. |
 | `context_window` | `integer` | `128000` | **Mandatory Best Practice.** Declares the exact token window capacity. Allocates up to 45% of tokens to symbol definitions. Prevents fallback to 16,384 tokens. |
-| `provider` | `string` | `"openrouter"` | Inference backend: `"openrouter"` (recommended free tier via `OPENROUTER_API_KEY`), `"copilot"` (GitHub Copilot CLI via `GITHUB_TOKEN` & `copilot-requests: write`), `"azure"`, `"openai"`, `"ollama"`. |
+| `api_key_env` | `string \| null` | `null` | Custom environment variable name storing the API key (e.g. `"GDSS_API_KEY"`). When set or when `GDSS_API_KEY` exists in `.env` / CI, GDSS uses this key with highest priority, isolating GDSS from project app keys. |
 | `risk_threshold` | `float` | `0.1` | Collision intensity threshold ($\Omega_{ij} \in [0.0, 1.0]$).<br>• `0.05`: High sensitivity (flags subtle caller dependencies)<br>• `0.10`: Recommended default balance<br>• `0.25`: Strict (flags only direct signature changes)<br>• `0.80`: Critical only (flags conflicting implementations) |
 | `max_refinements` | `integer` | `2` | Number of automated self-correction loops. If tests fail in the sandbox worktree, compiler error traces are fed back to the model to refine the patch up to $N$ times. |
 | `fail_on_collision` | `boolean` | `false` | If `true`, the CI job exits with code `1` when severe collisions are detected (used for required branch protection status checks). |
@@ -798,13 +816,44 @@ GDSS is distributed under a **Source-Available, Free Community Safe Harbor** mod
 
 ## 🛡️ Privacy, Deterministic Core & Bring Your Own Key (BYOK)
 
-- **100% Free Deterministic Core (0 Tokens):** Abstract Syntax Tree (AST) parsing, caller/callee graphs, and the pairwise collision radar run purely on the local GitHub Actions runner on CPU. They consume zero tokens and require no API keys.
-- **Strict Bring Your Own Key (BYOK) / BYOC:** GDSS is not an LLM reseller or paid API proxy. AI convergence suggestions run via your own model credentials with zero token markups:
-  - **In CI/CD:** Keys are configured in your repository secrets (`${{ secrets.OPENROUTER_API_KEY }}`) and injected securely into runner environment variables.
-  - **In Local CLI & Web:** GDSS automatically discovers and loads your project's local `.env` file (e.g. `OPENROUTER_API_KEY=...`) without requiring manual shell `export` commands.
-  - **In IDE MCP (Cursor / Claude Code):** Zero tokens are consumed by GDSS. Your existing IDE chat subscription powers reasoning and patch review.
-- **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database. API requests travel directly between the runner and your chosen model provider.
-- **No Unsolicited Telemetry:** GDSS respects developer privacy and complies with strict zero-telemetry boundaries.
+### 1. 100% Free Deterministic Core ($0 Compute & 0 Tokens)
+The deterministic collision radar runs entirely on local CPU:
+- Abstract Syntax Tree (AST) parsing across 20+ languages.
+- Blast radius caller/callee graphs and reverse impact closure.
+- Pairwise collision tensor calculations ($\Omega_{ij}$) and optimal topological merge ordering.
+- Ephemeral Git worktree validation with your native test and typecheck runners.
+
+**GDSS charges $0 and requires zero tokens or API keys for core collision analysis.** If no AI API key is configured, the action completes successfully with full risk tables and merge sequence recommendations.
+
+---
+
+### 2. Strict Bring Your Own Key (BYOK) / BYOC
+GDSS is not an LLM broker, markup reseller, or paid inference proxy. When AI convergence patch generation is enabled, requests travel directly between your runner/laptop and your model provider.
+
+#### 🌟 Explicit Recommendation: OpenRouter + `GDSS_API_KEY`
+For teams enabling AI convergence patches, we explicitly recommend **[OpenRouter](https://openrouter.ai)**:
+1. **Multi-Model Flexibility (Single Key):** Switch between DeepSeek V3, Claude 3.5 Sonnet, Llama 3.3, and GPT-4o simply by editing `model:` in `.gdss.yml`—no need to manage multiple vendor billing accounts.
+2. **$0 Free Tier (Zero Credit Card):** Set `model: "openrouter/free"` to automatically route through high-quality free coding models with zero credit card setup.
+3. **Dedicated Key Isolation (`GDSS_API_KEY`):** Most production repositories already maintain `.env` files with application secrets (e.g., your SaaS app's `OPENAI_API_KEY` or `DATABASE_URL`). Setting **`GDSS_API_KEY`** in your GitHub Secrets or local `.env` ensures GDSS never interferes with or exhausts your application's production tokens.
+4. **Custom Team Secret Names (`api_key_env`):** If your organization mandates specific secret naming conventions (e.g. `TEAM_OPENROUTER_SECRET`), declare `api_key_env: "TEAM_OPENROUTER_SECRET"` under `radar:` in `.gdss.yml`.
+
+---
+
+### 3. How Authentication Works Across the 4 Deployment Modes
+
+| Deployment Surface | Where Key Lives | How GDSS Reads It | Token Cost to GDSS |
+| :--- | :--- | :--- | :--- |
+| **GitHub Actions CI (`gdss audit-pr`)** | GitHub Repository Secrets (`GDSS_API_KEY` or `OPENROUTER_API_KEY`) | Injected via `env:` in `.github/workflows/gdss-radar.yml`. *(Note: CI runners do not read uncommitted `.env` files for security).* | **$0** (Billed directly to your provider or $0 on free tier) |
+| **Local CLI (`gdss suggest`)** | Project root `.env` | **Zero-config auto-discovery!** GDSS automatically parses `.env` at your repository root without requiring manual `export` or `source`. | **$0** (Direct to provider) |
+| **Web Dashboard & API (`gdss serve`)** | Project root `.env` | Automatically read from repository root `.env` or process environment on service start. | **$0** (Direct to provider) |
+| **IDE MCP Server (Cursor / Claude Code)** | Handled by your IDE subscription | Runs locally over `stdio`. Exposes deterministic AST tools to your IDE agent. | **0 tokens & keyless** (Covered by your Cursor / Claude Code subscription) |
+
+---
+
+### 4. Zero Proprietary Cloud Ingestion & Strict Privacy
+- **No Code Ingestion:** Your source code is never uploaded to any centralized GDSS cloud server or external training database.
+- **Strict Privacy Boundaries:** All AST graphs and worktree test operations remain entirely contained within your runner or developer workstation.
+- **Zero Telemetry:** GDSS respects open-source developer privacy and enforces strict zero-telemetry defaults.
 
 ---
 
