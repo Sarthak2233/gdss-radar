@@ -316,7 +316,7 @@ version: 1
 radar:
   model: "gpt-4o"
   context_window: 128000  # Explicit token ceiling (MANDATORY BEST PRACTICE)
-  provider: "openrouter"  # "openrouter" (default), "copilot" (Copilot CLI), "azure", "openai", "ollama"
+  provider: "openrouter"  # "openrouter" (default), "deepseek", "groq", "together", "mistral", "anthropic", "openai", "azure", "copilot", "ollama", "vllm", "lm-studio", "localai", "openai-compatible"
   risk_threshold: 0.1     # Sensitivity: 0.05 (sensitive) to 0.25 (strict)
   max_refinements: 2      # Sandboxed self-correction loops on compiler errors
   concurrency_limit: 4    # Concurrent worker threads for parallel conflict drafting
