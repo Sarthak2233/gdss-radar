@@ -2,7 +2,7 @@
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-GDSS%20Radar-blue?logo=github&style=flat-square)](https://github.com/marketplace/actions/gdss-pr-collision-radar)
 [![Release](https://img.shields.io/github/v/release/sarthak2233/gdss-radar?style=flat-square&color=success)](https://github.com/sarthak2233/gdss-radar/releases)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-GSARL--1.0-blue.svg?style=flat-square)](LICENSE)
 [![Deterministic Core](https://img.shields.io/badge/Core-Deterministic%20$0%20Tokens-brightgreen?style=flat-square)](#-privacy-deterministic-core--bring-your-own-key-byok)
 [![AI Model](https://img.shields.io/badge/AI%20Convergence-BYOK%20%2F%20BYOC-blue?style=flat-square)](#-privacy-deterministic-core--bring-your-own-key-byok)
 [![Docker Image](https://img.shields.io/badge/Container-GHCR%20Runner-purple?logo=docker&style=flat-square)](https://github.com/Sarthak2233/GDSS/pkgs/container/gdss-runner)
@@ -775,33 +775,40 @@ Your IDE AI agent gains 8 deterministic, zero-token tools:
 
 ---
 
-## 💰 Pricing & Commercial Model
+## 💰 Licensing & Commercial Safe Harbor
 
-GDSS is distributed under a **Closed-Engine, Free-Action** commercial model (similar to SonarQube, Snyk, and Codecov). We believe that pull request collision radar and repository intelligence should be accessible to every developer and engineering team without cost friction:
+GDSS is distributed under a **Source-Available, Free Community Safe Harbor** model (governed by the [GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)](LICENSE)). We believe that PR collision radar and deterministic repository intelligence should be freely accessible to developers and small teams without cost friction:
 
 > [!NOTE]
-> **Licensing Architecture**: This GitHub Action wrapper (`gdss-radar`) is open source under the [MIT License](LICENSE). The underlying runner container engine (`ghcr.io/sarthak2233/gdss-runner`) is governed by the **GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)**, free for organizations with up to 20 active Git contributors.
+> **Licensing Architecture**: Both this GitHub Action repository (`gdss-radar`) and the underlying core engine (`GDSS`) are governed by the **GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)**. Free production usage is granted under the Community Safe Harbor for individual developers, non-commercial open-source projects, and organizations with up to 20 active Git contributors.
 
 | Plan | Pricing | Target Audience | What is Included |
 | :--- | :---: | :--- | :--- |
-| **Community / Open Source** | **$0 / Free Forever** | Organizations with up to 20 active Git contributors, individual developers, and OSS projects | • **100% Free Deterministic Core** ($0 & 0 tokens charged by GDSS)<br>• Unlimited pull request collision radar audits<br>• Full pairwise interaction tensor ($\Omega_{ij}$)<br>• Multi-asset reducers (manifests, database migrations, SQL)<br>• Monorepo subpackage intelligence & worktree caching<br>• Bring Your Own Key (BYOK) AI convergence suggestions<br>• Standalone CLI & IDE MCP Server (Cursor, Claude Code, Copilot) |
-| **Team & Organization** | **Contact / Early Access** | Scaling engineering teams managing multi-repo microservices or teams > 20 contributors | • **Cross-Repository Collision Radar** (audits API contract breaks across multiple microservice repos *before* deploy)<br>• Centralized branch landing policies & merge queues<br>• Dedicated managed cloud runners (zero GitHub Actions minute consumption)<br>• Private modification waivers, SOC2 audit logs, SSO/SAML, & Enterprise SLA |
+| **Community Safe Harbor** | **$0 / Free Forever** | Individual developers, public open-source projects, and teams with up to 20 active Git contributors | • **100% Free Deterministic Core** ($0 & 0 tokens charged by GDSS)<br>• Unlimited pull request collision radar audits on single repos & monorepos<br>• Full pairwise branch collision matrix . 3-tier multi-language AST parsing (Python, TS/JS, Go, Rust, Java, C/C++ + universal structural fallback)<br>• Ephemeral worktree sandbox validation (syntax, types, targeted unit tests)<br>• Bring Your Own Key (BYOK) AI convergence suggestions (Ollama, vLLM, OpenRouter, GitHub Models)<br>• Standalone CLI (`gdss`) & IDE MCP Server for Cursor, Claude Code, and Copilot |
+| **Commercial / Enterprise** | **Commercial Agreement** | Organizations with > 20 active Git contributors, or enterprises requiring private modifications | • **Enterprise Commercial License** (authorizes production use for teams with > 20 active contributors)<br>• **Private Modification Waiver** (allows deploying internal proprietary forks without mandatory reciprocal share-back under GSARL 1.0)<br>• Dedicated onboarding, integration support, and commercial SLA<br>• Priority issue triage and upstream feature steering |
 
-> 💬 **Enterprise & Multi-Repo Inquiries:**  
-> To discuss multi-repository microservice collision radar, private modification waivers, or organization governance for your team, start a thread on [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions).
+> [!IMPORTANT]
+> **Scope & Multi-Repository Boundary**:  
+> GDSS currently analyzes concurrent branches and pull requests **within a single Git repository or multi-package monorepo**. Cross-repository contract synchronization across independent microservice repositories is an architectural problem space and research track (see [`Distributed Collaboration Across Repositories and Organizations.md`](../docs/problem-definations/Distributed%20Collaboration%20Across%20Repositories%20and%20Organizations.md)) and is not an active product feature.
+
+> 💬 **Enterprise Inquiries:**  
+> To discuss enterprise licensing for teams with > 20 active contributors, private modification waivers, or custom agreements, start a thread on [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions) or contact sarthak.basnet5@gmail.com.
 
 ---
 
 ## 🛡️ Privacy, Deterministic Core & Bring Your Own Key (BYOK)
 
 - **100% Free Deterministic Core (0 Tokens):** Abstract Syntax Tree (AST) parsing, caller/callee graphs, and the pairwise collision radar run purely on the local GitHub Actions runner on CPU. They consume zero tokens and require no API keys.
-- **Strict Bring Your Own Key (BYOK) / BYOC:** GDSS is not an LLM reseller or paid API proxy. AI convergence suggestions run via your own model credentials configured in your repository secrets (OpenAI, DeepSeek, OpenRouter, Azure AI, or Copilot CLI). GDSS charges zero token markups.
-- **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database. API requests travel directly between the GitHub runner and your chosen model provider.
+- **Strict Bring Your Own Key (BYOK) / BYOC:** GDSS is not an LLM reseller or paid API proxy. AI convergence suggestions run via your own model credentials with zero token markups:
+  - **In CI/CD:** Keys are configured in your repository secrets (`${{ secrets.OPENROUTER_API_KEY }}`) and injected securely into runner environment variables.
+  - **In Local CLI & Web:** GDSS automatically discovers and loads your project's local `.env` file (e.g. `OPENROUTER_API_KEY=...`) without requiring manual shell `export` commands.
+  - **In IDE MCP (Cursor / Claude Code):** Zero tokens are consumed by GDSS. Your existing IDE chat subscription powers reasoning and patch review.
+- **Zero Proprietary Cloud Ingestion:** Your source code is never transmitted to any external GDSS server or centralized database. API requests travel directly between the runner and your chosen model provider.
 - **No Unsolicited Telemetry:** GDSS respects developer privacy and complies with strict zero-telemetry boundaries.
 
 ---
 
 ## 📄 License
 
-This GitHub Action wrapper and starter configurations are licensed under the [MIT License](LICENSE).  
-The underlying analysis engine is powered by Gate Distributive Semantic Synopsis (GDSS), licensed under the [GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)](https://github.com/Sarthak2233/GDSS/blob/main/LICENSE.md).
+This repository and its action configurations are licensed under the **[GDSS Source-Available Reciprocal License 1.0 (GSARL 1.0)](LICENSE)**.  
+Free for evaluation, research, and production use for teams with up to 20 active contributors. For enterprise licensing, organization agreements (>20 contributors), or private modification waivers, contact sarthak.basnet5@gmail.com or visit [GitHub Discussions](https://github.com/sarthak2233/gdss-radar/discussions).
