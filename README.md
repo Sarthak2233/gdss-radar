@@ -516,8 +516,12 @@ GDSS is not a paid AI middleman and does not provide or subsidize cloud LLM infe
 ### 3. ⚠️ Mandatory `fetch-depth: 0`
 Standard GitHub Actions checkout uses `depth: 1` (a shallow copy of only the latest commit). GDSS **requires `fetch-depth: 0`** to inspect the Git DAG, identify the common ancestor merge-base between concurrent branches, and calculate trajectory mutations ($dC$).
 
-### 4. 📌 Single Sticky Comment (Zero Notification Spam)
-GDSS never spams your pull request with dozens of new comments. It posts **one single sticky comment** on PR creation and updates (`PATCH`) it in-place whenever new commits are pushed. When a collision is resolved, the comment automatically updates to an **"All Clear ✅"** status.
+### 4. 📌 Single Sticky Comment & Automatic Retrigger on Push
+GDSS never spams your pull request with dozens of new comments. It posts **one single sticky comment** on PR creation and updates (`PATCH`) it in-place whenever subsequent commits are pushed:
+- **Automatic Retrigger on Subsequent Pushes (`synchronize`):** In GitHub Actions, when new commits are pushed to an open pull request, GitHub emits the `pull_request` event with `action: synchronize`. Because our workflow specifies `types: [opened, synchronize, reopened]`, the collision radar **automatically retriggers on every subsequent push**, recalculating collisions against the latest commit.
+- **Why GitHub Says "1d ago" on the Comment Header:** In GitHub's web interface, the timestamp at the top of an issue comment (`github-actions Bot 1d ago`) strictly reflects the time the comment was *originally created*. GitHub does not update the header creation date when a comment is edited via API (`PATCH`).
+- **Live Commit & Timestamp Stamping:** To ensure complete transparency, GDSS stamps the comment body with the exact **Audited Commit SHA** (e.g. `da3ee06`) and a **Live UTC Evaluation Timestamp** (`⏱️ Last Evaluated: YYYY-MM-DD HH:MM:SS UTC`). Whenever you push a new commit, the comment body visibly updates with the new commit SHA and timestamp, giving developers 100% confidence that the latest push was evaluated.
+- **Dynamic Status Resolution:** When collisions are fixed or merged, the sticky comment automatically transitions in-place from `⚠️ Collisions Detected` to `✅ All Clear`.
 
 ### 5. ⚡ Ephemeral Sandbox Validation
 AI candidate suggestions are **never presented blind**. Before rendering a suggestion in Markdown, GDSS creates an isolated temporary Git worktree on the runner, applies the candidate patch, and executes your configured `test_command` and `typecheck_command`. If errors occur, it feeds compiler traces back to the model (up to `max_refinements`) to self-heal the patch.
