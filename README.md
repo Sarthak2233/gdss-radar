@@ -497,6 +497,8 @@ Here are the key operational principles and behaviors you should know when using
 ### 1. 💰 100% Free Deterministic Core ($0 & 0 Tokens)
 The deterministic core of GDSS — AST parsing, dependency graphs, caller/callee tracing, domain reducers, and the $\Omega_{ij}$ collision tensor — runs **100% locally on CPU within the GitHub Actions runner**. It costs **literal $0 and consumes 0 tokens** for every repository, requiring zero third-party API keys.
 
+These recipies usage differs, when you integrate in the CI/CD mode then the api key for the LLM is taken from your github secrets as mentioned before. The .env auto discovery form the installed project root is only for the users using the CLI from the terminal or web dashboard.
+
 ### 2. 🤖 Bring Your Own Key (BYOK) AI Convergence
 GDSS is not a paid AI middleman and does not provide or subsidize cloud LLM inference. For synthesizing natural-language conflict explanations and automated 1-click reconciliation patches, GDSS uses a strict **Bring Your Own Key (BYOK)** / **Bring Your Own Compute (BYOC)** model:
 - **OpenRouter Free Tier ($0, No Credit Card):** Set `provider: "openrouter"` and `model: "openrouter/free"` in `.gdss.yml` and provide `OPENROUTER_API_KEY` in GitHub Secrets. The `openrouter/free` meta-router automatically connects to active zero-cost models with coding capabilities without requiring credits. (Note: specific endpoints like `qwen/qwen-2.5-coder-32b-instruct` without a `:free` suffix are billed at standard token rates on OpenRouter).
